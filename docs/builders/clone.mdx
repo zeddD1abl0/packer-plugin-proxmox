@@ -42,31 +42,6 @@ in the image's Cloud-Init settings for provisioning.
 
 ### Required:
 
-- `proxmox_url` (string) - URL to the Proxmox API, including the full path,
-  so `https://<server>:<port>/api2/json` for example.
-  Can also be set via the `PROXMOX_URL` environment variable.
-
-- `username` (string) - Username when authenticating to Proxmox, including
-  the realm. For example `user@pve` to use the local Proxmox realm. When using
-  token authentication, the username must include the token id after an exclamation
-  mark. For example, `user@pve!tokenid`. 
-  Can also be set via the `PROXMOX_USERNAME` environment variable.
-
-- `password` (string) - Password for the user.
-  For API tokens please use `token`.
-  Can also be set via the `PROXMOX_PASSWORD` environment variable.
-  Either `password` or `token` must be specifed. If both are set,
-  `token` takes precedence.
-
-- `token` (string) - Token for authenticating API calls.
-  This allows the API client to work with API tokens instead of user passwords.
-  Can also be set via the `PROXMOX_TOKEN` environment variable.
-  Either `password` or `token` must be specifed. If both are set,
-  `token` takes precedence.
-
-- `node` (string) - Which node in the Proxmox cluster to start the virtual
-  machine on during creation.
-
 - `clone_vm` (string) - The name of the VM Packer should clone and build from.
   Either `clone_vm` or `clone_vm_id` must be specifed.
 
@@ -74,60 +49,392 @@ in the image's Cloud-Init settings for provisioning.
   Proxmox VMIDs are limited to the range 100-999999999.
   Either `clone_vm` or `clone_vm_id` must be specifed.
 
+- `node` (string) - Which node in the Proxmox cluster to start the virtual
+  machine on during creation.
+
+- `password` (string) - Password for the user.
+  For API tokens please use `token`.
+  Can also be set via the `PROXMOX_PASSWORD` environment variable.
+  Either `password` or `token` must be specifed. If both are set,
+  `token` takes precedence.
+
+- `proxmox_url` (string) - URL to the Proxmox API, including the full path,
+  so `https://<server>:<port>/api2/json` for example.
+  Can also be set via the `PROXMOX_URL` environment variable.
+
+- `token` (string) - Token for authenticating API calls.
+  This allows the API client to work with API tokens instead of user passwords.
+  Can also be set via the `PROXMOX_TOKEN` environment variable.
+  Either `password` or `token` must be specifed. If both are set,
+  `token` takes precedence.
+
+- `username` (string) - Username when authenticating to Proxmox, including
+  the realm. For example `user@pve` to use the local Proxmox realm. When using
+  token authentication, the username must include the token id after an exclamation
+  mark. For example, `user@pve!tokenid`. 
+  Can also be set via the `PROXMOX_USERNAME` environment variable.
+
+<Tabs>
+<Tab heading="HCL2">
+
+```hcl
+source "proxmox_iso" "documentation" {
+  clone_vm = "vmname"
+  #clone_vm_id = 101
+  node = "node01"
+  password = "mySuperSecretPassword01!"
+  proxmox_url = "https://node01.demo.local:8006/api2/json"
+  #token = ""
+  username = "root@pam"
+}
+```
+
+</Tab>
+<Tab heading="JSON">
+
+```json
+{
+  "builders": [
+    {
+      "type": "proxmox-iso",
+      "clone_vm": "vmname",
+      "node": "node01",
+      "password": "mySuperSecretPassword01!",
+      "proxmox_url": "https://node01.demo.local:8006/api2/json",
+      "username": "root@pam",
+    }
+  ]
+}
+```
+
+</Tab>
+</Tabs>
+
 ### Optional:
 
-- `insecure_skip_tls_verify` (bool) - Skip validating the certificate.
+- `additional_iso_files` (array of objects) - Additional ISO files attached to the virtual machine.
+  Example:
 
-- `task_timeout` (duration string | ex: "10m") - The timeout for
-  Promox API operations, e.g. clones. Defaults to 1 minute.
+  <Tabs>
+  <Tab heading="HCL2">
 
-- `pool` (string) - Name of resource pool to create virtual machine in.
+  ```hcl
+  additional_iso_files {
+    device = "scsi5"
+    iso_checksum = "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386"
+    iso_file = "local:iso/virtio-win-0.1.229.iso"
+  }
+  ```
 
-- `vm_name` (string) - Name of the virtual machine during creation. If not
-  given, a random uuid will be used.
+  </Tab>
+  <Tab heading="JSON">
 
-- `vm_id` (int) - The ID used to reference the virtual machine. This will
-  also be the ID of the final template. Proxmox VMIDs are unique cluster-wide
-  and are limited to the range 100-999999999.
-  If not given, the next free ID on the cluster will be used.
+  ```json
+  "additional_iso_files": [
+    {
+      "device": "scsi5",
+      "iso_checksum": "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386",
+      "iso_file": "local:iso/virtio-win-0.1.229.iso",
+      "unmount": true
+    }
+  ]
+  ```
 
-- `memory` (int) - How much memory, in megabytes, to give the virtual
-  machine. Defaults to `512`.
+  </Tab>
+  </Tabs>
+
+  + `cd_content` (map[string]string) - Key/Values to add to the CD. The keys represent the paths, and the values
+    contents. It can be used alongside `cd_files`, which is useful to add large
+    files without loading them into memory. If any paths are specified by both,
+    the contents in `cd_content` will take precedence.
+
+  ```hcl
+  additional_iso_files {
+    cd_files = ["vendor-data"]
+    cd_content = {
+      "meta-data" = jsonencode(local.instance_data)
+      "user-data" = templatefile("user-data", { packages = ["nginx"] })
+    }
+    cd_label = "cidata"
+  }
+  ```
+
+  + `cd_files` ([]string) - A list of files to place onto a CD that is attached when the VM is
+    booted. This can include either files or directories; any directories
+    will be copied onto the CD recursively, preserving directory structure
+    hierarchy. Symlinks will have the link's target copied into the directory
+    tree on the CD where the symlink was. File globbing is allowed. Overrides
+    any of `iso_file` or `iso_url` set. Requires `iso_storage_pool` to be set
+
+  <Tabs>
+  <Tab heading="HCL2">
+
+  ```hcl
+  additional_iso_files {
+    cd_files = ["./somedirectory/meta-data", "./somedirectory/user-data"]
+    cd_label = "cidata"
+  }
+  ```
+
+  </Tab>
+  <Tab heading="JSON">
+
+  ```json
+  "additional_iso_files": [
+    {
+      "cd_files": ["./somedirectory/meta-data", "./somedirectory/user-data"],
+      "cd_label": "cidata",
+    }
+  ]
+  ```
+
+  </Tab>
+  </Tabs>
+
+    The above will create a CD with two files, user-data and meta-data in the
+    CD root. This specific example is how you would create a CD that can be
+    used for an Ubuntu 20.04 autoinstall.
+
+    Since globbing is also supported,
+
+  <Tabs>
+  <Tab heading="HCL2">
+
+  ```hcl
+  additional_iso_files {
+    cd_files = ["./somedirectory/*"]
+    cd_label = "cidata"
+  }
+  ```
+
+  </Tab>
+  <Tab heading="JSON">
+
+  ```json
+  "additional_iso_files": [
+    {
+      "cd_files": ["./somedirectory/*"],
+      "cd_label": "cidata",
+    }
+  ]
+  ```
+
+  </Tab>
+  </Tabs>
+
+    Would also be an acceptable way to define the above cd. The difference
+    between providing the directory with or without the glob is whether the
+    directory itself or its contents will be at the CD root.
+
+    Use of this option assumes that you have a command line tool installed
+    that can handle the iso creation. Packer will use one of the following
+    tools:
+
+    - xorriso
+    - mkisofs
+    - hdiutil (normally found in macOS)
+    - oscdimg (normally found in Windows as part of the Windows ADK)
+
+  + `cd_label` (string) - CD Label
+
+  - `device` (string) - Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
+    `sataX` or `scsiX`.
+    For `ide` the bus index ranges from 0 to 3, for `sata` form 0 to 5 and for
+    `scsi` from 0 to 30.
+    Defaults to `ide3` since `ide2` is generally the boot drive.
+
+  - `iso_file` (string) - Path to the ISO file to boot from, expressed as a
+    proxmox datastore path, for example
+    `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
+    Either `iso_file` OR `iso_url` must be specifed.
+
+  - `iso_url` (string) - URL to an ISO file to upload to Proxmox, and then
+    boot from. Either `iso_file` OR `iso_url` must be specifed.
+
+  - `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
+    the ISO file.
+
+  - `iso_checksum` (string) - Checksum of the ISO file.
+  - `unmount` (bool) - If true, remove the mounted ISO from the template after finishing. Defaults to `false`.
+
+- `bios` - (string) - Set the machine bios. This can be set to ovmf or seabios. The default value is seabios.
+
+- `boot` - (string) - Override default boot order. Format example `order=virtio0;ide2;net0`.
+  Prior to Proxmox 6.2-15 the format was `cdn` (c:CDROM -> d:Disk -> n:Network)
+
+- `cloud_init` (bool) - If true, add an empty Cloud-Init CDROM drive after the virtual
+  machine has been converted to a template. Defaults to `false`.
+
+- `cloud_init_storage_pool` (string) - Name of the Proxmox storage pool
+  to store the Cloud-Init CDROM on. If not given, the storage pool of the boot device will be used.
 
 - `cores` (int) - How many CPU cores to give the virtual machine. Defaults
   to `1`.
-
-- `sockets` (int) - How many CPU sockets to give the virtual machine.
-  Defaults to `1`
 
 - `cpu_type` (string) - The CPU type to emulate. See the Proxmox API
   documentation for the complete list of accepted values. For best
   performance, set this to `host`. Defaults to `kvm64`.
 
-- `os` (string) - The operating system. Can be `wxp`, `w2k`, `w2k3`, `w2k8`,
-  `wvista`, `win7`, `win8`, `win10`, `l24` (Linux 2.4), `l26` (Linux 2.6+),
-  `solaris` or `other`. Defaults to `other`.
+- `disable_kvm` (boolean) - Disables KVM hardware virtualization. Defaults to `false`.
 
-- `vga` (object) - The graphics adapter to use. Example:
+- `disks` (array of objects) - Disks attached to the virtual machine.
+  Example:
 
-  ```json
-  {
-    "type": "vmware",
-    "memory": 32
+  <Tabs>
+  <Tab heading="HCL2">
+
+  ```hcl
+  disks {
+    disk_size = "5G"
+    format = qcow2
+    storage_pool = "local-lvm"
+    type = "scsi"
   }
   ```
 
-  - `type` (string) - Can be `cirrus`, `none`, `qxl`,`qxl2`, `qxl3`,
-    `qxl4`, `serial0`, `serial1`, `serial2`, `serial3`, `std`, `virtio`, `vmware`.
-    Defaults to `std`.
+  </Tab>
+  <Tab heading="JSON">
 
-  - `memory` (int) - How much memory to assign.
+  ```json
+  "disks": [
+    {
+      "disk_size": "5G",
+      "format": "qcow2",
+      "storage_pool": "local-lvm",
+      "type": "scsi"
+    }
+  ]
+  ```
+
+  </Tab>
+  </Tabs>
+
+  - `storage_pool` (string) - Required. Name of the Proxmox storage pool
+    to store the virtual machine disk on. A `local-lvm` pool is allocated
+    by the installer, for example.
+
+  - `storage_pool_type` (string) - This option is deprecated.
+
+  - `type` (string) - The type of disk. Can be `scsi`, `sata`, `virtio` or
+    `ide`. Defaults to `scsi`.
+
+  - `disk_size` (string) - The size of the disk, including a unit suffix, such
+    as `10G` to indicate 10 gigabytes.
+
+  - `cache_mode` (string) - How to cache operations to the disk. Can be
+    `none`, `writethrough`, `writeback`, `unsafe` or `directsync`.
+    Defaults to `none`.
+
+  - `format` (string) - The format of the file backing the disk. Can be
+    `raw`, `cow`, `qcow`, `qed`, `qcow2`, `vmdk` or `cloop`. Defaults to
+    `raw`.
+
+  - `io_thread` (bool) - Create one I/O thread per storage controller, rather
+    than a single thread for all I/O. This can increase performance when
+    multiple disks are used. Requires `virtio-scsi-single` controller and a
+    `scsi` or `virtio` disk. Defaults to `false`.
+
+- `efi_config` - (object) - Set the efidisk storage options. This needs to be set if you use ovmf uefi boot
+  (supersedes the `efidisk` option).
+
+  <Tabs>
+  <Tab heading="HCL2">
+
+  ```hcl
+  bios = "ovmf"
+  efi_config {
+    efi_storage_pool = "local",
+    pre_enrolled_keys = true,
+    efi_type = "4m"
+  }
+  ```
+
+  </Tab>
+  <Tab heading="JSON">
+
+  ```json
+  "bios": "ovmf",
+  "efi_config": {
+    "efi_storage_pool": "local",
+    "pre_enrolled_keys": true,
+    "efi_type": "4m"
+  }
+  ```
+
+  </Tab>
+  </Tabs>
+
+  - `storage_pool` - (string) - Name of the Proxmox storage pool to store the EFI disk on.
+
+  - `efitype` - (string) - Specifies the version of the OVMF firmware to be used. Can be `2m` or `4m`.
+    Defaults to `4m`.
+
+  - `pre_enrolled_keys` - (boolean) - Whether Microsoft Standard Secure Boot keys should be pre-loaded on
+    the EFI disk. Defaults to `false`.
+
+- `efidisk` - (string) - This option is deprecated, please use `efi_config` instead.
+
+- `full_clone` (bool) - Whether to run a full or shallow clone from the base clone_vm. Defaults to `true`.
+
+- `http_interface` - (string) - Name of the network interface that Packer gets
+  `HTTPIP` from. Defaults to the first non loopback interface.
+
+- `insecure_skip_tls_verify` (bool) - Skip validating the certificate.
+
+- `ipconfig` (array of objects) - Set IP address and gateway via Cloud-Init.
+  If no options are given, DHCP will be used.
+  If you have configured more than one network interface, make sure to match the order of
+  `network_adapters` and `ipconfig`. 
+
+  Usage example (JSON):
+
+  ```json
+  [
+    {
+      "ip": "192.168.1.55/24",
+      "gateway": "192.168.1.1",
+      "ip6": "fda8:a260:6eda:20::4da/128",
+      "gateway6": "fda8:a260:6eda:20::1"
+    }
+  ]
+  ```
+
+  - `ip` (string) IPv4 address (CIDR notation).
+
+  - `gateway` (string) IPv4 gateway.
+
+  - `ip6` (string) IPv6 address (CIDR notation).
+
+  - `gateway6` (string) IPv6 gateway.
+
+- `machine` - (string) - Set the machine type. Supported values are 'pc' or 'q35'.
+
+- `memory` (int) - How much memory, in megabytes, to give the virtual
+  machine. Defaults to `512`.
+
+- `nameserver` (string) - Set nameserver IP address(es) via Cloud-Init.
+  If not given, the same setting as on the host is used.
 
 - `network_adapters` (array of objects) - Network adapters attached to the
   virtual machine. Example:
 
+  <Tabs>
+  <Tab heading="HCL2">
+
+  ```hcl
+  network_adapters {
+    model = "virtio"
+    bridge = "vmbr0"
+    vlan_tag = "10"
+    firewall = true
+  }
+  ```
+
+  </Tab>
+  <Tab heading="JSON">
+
   ```json
-  [
+  "network_adapters": [
     {
       "model": "virtio",
       "bridge": "vmbr0",
@@ -136,6 +443,9 @@ in the image's Cloud-Init settings for provisioning.
     }
   ]
   ```
+
+  </Tab>
+  </Tabs>
 
   - `bridge` (string) - Required. Which Proxmox bridge to attach the
     adapter to.
@@ -168,186 +478,104 @@ in the image's Cloud-Init settings for provisioning.
     operating as a router, reverse proxy or a busy HTTP server. Requires
     `virtio` network adapter. Defaults to `0`.
 
-- `serials` ([]string) - A list (max 4 elements) of serial ports attached to
-the virtual machine. It may pass through a host serial device `/dev/ttyS0`
-or create unix socket on the host `socket`. Each element can be `socket`
-or responding to pattern `/dev/.+`. Example:
-
-  ```json
-  [
-    "socket",
-    "/dev/ttyS1"
-  ]
-  ```
-
-- `disks` (array of objects) - Disks attached to the virtual machine.
-  Example:
-
-  ```json
-  [
-    {
-      "type": "scsi",
-      "disk_size": "5G",
-      "storage_pool": "local-lvm",
-      "storage_pool_type": "lvm"
-    }
-  ]
-  ```
-
-  - `storage_pool` (string) - Required. Name of the Proxmox storage pool
-    to store the virtual machine disk on. A `local-lvm` pool is allocated
-    by the installer, for example.
-
-  - `storage_pool_type` (string) - This option is deprecated.
-
-  - `type` (string) - The type of disk. Can be `scsi`, `sata`, `virtio` or
-    `ide`. Defaults to `scsi`.
-
-  - `disk_size` (string) - The size of the disk, including a unit suffix, such
-    as `10G` to indicate 10 gigabytes.
-
-  - `cache_mode` (string) - How to cache operations to the disk. Can be
-    `none`, `writethrough`, `writeback`, `unsafe` or `directsync`.
-    Defaults to `none`.
-
-  - `format` (string) - The format of the file backing the disk. Can be
-    `raw`, `cow`, `qcow`, `qed`, `qcow2`, `vmdk` or `cloop`. Defaults to
-    `raw`.
-
-  - `io_thread` (bool) - Create one I/O thread per storage controller, rather
-    than a single thread for all I/O. This can increase performance when
-    multiple disks are used. Requires `virtio-scsi-single` controller and a
-    `scsi` or `virtio` disk. Defaults to `false`.
-
-- `template_name` (string) - Name of the template. Defaults to the generated
-  name used during creation.
-
-- `template_description` (string) - Description of the template, visible in
-  the Proxmox interface.
-
 - `onboot` (boolean) - Specifies whether a VM will be started during system
   bootup. Defaults to `false`.
+
+- `os` (string) - The operating system. Can be `wxp`, `w2k`, `w2k3`, `w2k8`,
+  `wvista`, `win7`, `win8`, `win10`, `l24` (Linux 2.4), `l26` (Linux 2.6+),
+  `solaris` or `other`. Defaults to `other`.
+
+- `pool` (string) - Name of resource pool to create virtual machine in.
 
 - `qemu_agent` (boolean) - Enables QEMU Agent option for this VM. When enabled,
   then `qemu-guest-agent` must be installed on the guest. When disabled, then
   `ssh_host` should be used. Defaults to `true`.
 
-- `disable_kvm` (boolean) - Disables KVM hardware virtualization. Defaults to `false`.
-
 - `scsi_controller` (string) - The SCSI controller model to emulate. Can be `lsi`,
   `lsi53c810`, `virtio-scsi-pci`, `virtio-scsi-single`, `megasas`, or `pvscsi`.
   Defaults to `lsi`.
 
-- `cloud_init` (bool) - If true, add an empty Cloud-Init CDROM drive after the virtual
-  machine has been converted to a template. Defaults to `false`.
-
-- `cloud_init_storage_pool` (string) - Name of the Proxmox storage pool
-  to store the Cloud-Init CDROM on. If not given, the storage pool of the boot device will be used.
-
-- `nameserver` (string) - Set nameserver IP address(es) via Cloud-Init.
-  If not given, the same setting as on the host is used.
-
 - `searchdomain` (string) - Set the DNS searchdomain via Cloud-Init.
   If not given, the same setting as on the host is used.
 
-- `ipconfig` (array of objects) - Set IP address and gateway via Cloud-Init.
-  If no options are given, DHCP will be used.
-  If you have configured more than one network interface, make sure to match the order of
-  `network_adapters` and `ipconfig`. 
+- `serials` ([]string) - A list (max 4 elements) of serial ports attached to
+  the virtual machine. It may pass through a host serial device `/dev/ttyS0`
+  or create unix socket on the host `socket`. Each element can be `socket`
+  or responding to pattern `/dev/.+`. Example:
 
-  Usage example (JSON):
+<Tabs>
+<Tab heading="HCL2">
 
-  ```json
-  [
-    {
-      "ip": "192.168.1.55/24",
-      "gateway": "192.168.1.1",
-      "ip6": "fda8:a260:6eda:20::4da/128",
-      "gateway6": "fda8:a260:6eda:20::1"
-    }
-  ]
+```hcl
+serials = ["socket", "/dev/ttyS1"]
+```
+
+</Tab>
+<Tab heading="JSON">
+
+```json
+"serials": [
+  "socket",
+  "/dev/ttyS1"
+]
+```
+
+</Tab>
+</Tabs>
+
+- `sockets` (int) - How many CPU sockets to give the virtual machine.
+  Defaults to `1`
+
+- `task_timeout` (duration string | ex: "10m") - The timeout for
+  Promox API operations, e.g. clones. Defaults to 1 minute.
+
+- `template_description` (string) - Description of the template, visible in
+  the Proxmox interface.
+
+- `template_name` (string) - Name of the template. Defaults to the generated
+  name used during creation.
+
+- `vga` (object) - The graphics adapter to use. Example:
+
+  <Tabs>
+  <Tab heading="HCL2">
+
+  ```hcl
+  vga {
+    type = "vmware"
+    memory = 32
+  }
   ```
 
-  - `ip` (string) IPv4 address (CIDR notation).
-
-  - `gateway` (string) IPv4 gateway.
-
-  - `ip6` (string) IPv6 address (CIDR notation).
-
-  - `gateway6` (string) IPv6 gateway.
-
-- `additional_iso_files` (array of objects) - Additional ISO files attached to the virtual machine.
-  Example:
+  </Tab>
+  <Tab heading="JSON">
 
   ```json
-  [
-    {
-      "device": "scsi5",
-      "iso_file": "local:iso/virtio-win-0.1.185.iso",
-      "unmount": true,
-      "iso_checksum": "af2b3cc9fa7905dea5e58d31508d75bba717c2b0d5553962658a47aebc9cc386"
-    }
-  ]
+  "vga": {
+    "type": "vmware",
+    "memory": 32
+  }
   ```
 
-  - `device` (string) - Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
-    `sataX` or `scsiX`.
-    For `ide` the bus index ranges from 0 to 3, for `sata` form 0 to 5 and for
-    `scsi` from 0 to 30.
-    Defaults to `ide3` since `ide2` is generally the boot drive.
+  </Tab>
+  </Tabs>
 
-  - `iso_file` (string) - Path to the ISO file to boot from, expressed as a
-    proxmox datastore path, for example
-    `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
-    Either `iso_file` OR `iso_url` must be specifed.
+  - `type` (string) - Can be `cirrus`, `none`, `qxl`,`qxl2`, `qxl3`,
+    `qxl4`, `serial0`, `serial1`, `serial2`, `serial3`, `std`, `virtio`, `vmware`.
+    Defaults to `std`.
 
-  - `iso_url` (string) - URL to an ISO file to upload to Proxmox, and then
-    boot from. Either `iso_file` OR `iso_url` must be specifed.
+  - `memory` (int) - How much memory to assign.
 
-  - `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
-    the ISO file.
-
-  - `iso_checksum` (string) - Checksum of the ISO file.
-  - `unmount` (bool) - If true, remove the mounted ISO from the template after finishing. Defaults to `false`.
-
-- `http_interface` - (string) - Name of the network interface that Packer gets
-  `HTTPIP` from. Defaults to the first non loopback interface.
+- `vm_id` (int) - The ID used to reference the virtual machine. This will
+  also be the ID of the final template. Proxmox VMIDs are unique cluster-wide
+  and are limited to the range 100-999999999.
+  If not given, the next free ID on the cluster will be used.
 
 - `vm_interface` - (string) - Name of the network interface that Packer gets
   the VMs IP from. Defaults to the first non loopback interface.
 
-
-- `full_clone` (bool) - Whether to run a full or shallow clone from the base clone_vm. Defaults to `true`.
-
-- `boot` - (string) - Override default boot order. Format example `order=virtio0;ide2;net0`.
-  Prior to Proxmox 6.2-15 the format was `cdn` (c:CDROM -> d:Disk -> n:Network)
-
-- `bios` - (string) - Set the machine bios. This can be set to ovmf or seabios. The default value is seabios.
-
-- `efi_config` - (object) - Set the efidisk storage options. This needs to be set if you use ovmf uefi boot
-  (supersedes the `efidisk` option).
-
-  Usage example (JSON):
-
-  ```json
-  {
-    "efi_storage_pool": "local",
-    "pre_enrolled_keys": true,
-    "efi_type": "4m"
-  }
-  ```
-
-  - `storage_pool` - (string) - Name of the Proxmox storage pool to store the EFI disk on.
-
-  - `efitype` - (string) - Specifies the version of the OVMF firmware to be used. Can be `2m` or `4m`.
-    Defaults to `4m`.
-
-  - `pre_enrolled_keys` - (boolean) - Whether Microsoft Standard Secure Boot keys should be pre-loaded on
-    the EFI disk. Defaults to `false`.
-
-- `efidisk` - (string) - This option is deprecated, please use `efi_config` instead.
-
-- `machine` - (string) - Set the machine type. Supported values are 'pc' or 'q35'.
+- `vm_name` (string) - Name of the virtual machine during creation. If not
+  given, a random uuid will be used.
 
 ## Example: Cloud-Init enabled Debian
 

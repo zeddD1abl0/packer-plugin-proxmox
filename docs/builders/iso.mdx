@@ -246,7 +246,6 @@ source "proxmox_iso" "documentation" {
     - hdiutil (normally found in macOS)
     - oscdimg (normally found in Windows as part of the Windows ADK)
 
-
   + `cd_label` (string) - CD Label
 
   + `device` (string) - Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
@@ -386,6 +385,9 @@ source "proxmox_iso" "documentation" {
   * `storage_pool` - (string) - Name of the Proxmox storage pool to store the EFI disk on.
 
 - `efidisk` - (string) - This option is deprecated, please use `efi_config` instead.
+
+- `http_interface` - (string) - Name of the network interface that Packer gets
+  `HTTPIP` from. Defaults to the first non loopback interface.
 
 - `insecure_skip_tls_verify` (bool) - Skip validating the certificate.
 
@@ -555,14 +557,11 @@ serials = ["socket", "/dev/ttyS1"]
   and are limited to the range 100-999999999.
   If not given, the next free ID on the cluster will be used.
 
-- `vm_name` (string) - Name of the virtual machine during creation. If not
-  given, a random uuid will be used.
-
-- `http_interface` - (string) - Name of the network interface that Packer gets
-  `HTTPIP` from. Defaults to the first non loopback interface.
-
 - `vm_interface` - (string) - Name of the network interface that Packer gets
   the VMs IP from. Defaults to the first non loopback interface.
+
+- `vm_name` (string) - Name of the virtual machine during creation. If not
+  given, a random uuid will be used.
 
 ## Boot Command
 

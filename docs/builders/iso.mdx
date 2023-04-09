@@ -487,11 +487,11 @@ additional_iso_files {
 </Tab>
 </Tabs>
 
-    The above will create a CD with two files, user-data and meta-data in the
-    CD root. This specific example is how you would create a CD that can be
-    used for an Ubuntu 20.04 autoinstall.
+  The above will create a CD with two files, user-data and meta-data in the
+  CD root. This specific example is how you would create a CD that can be
+  used for an Ubuntu 20.04 autoinstall.
 
-    Since globbing is also supported,
+  Since globbing is also supported,
 
 <Tabs>
 <Tab heading="HCL2">
@@ -518,18 +518,18 @@ additional_iso_files {
 </Tab>
 </Tabs>
 
-    Would also be an acceptable way to define the above cd. The difference
-    between providing the directory with or without the glob is whether the
-    directory itself or its contents will be at the CD root.
+  Would also be an acceptable way to define the above cd. The difference
+  between providing the directory with or without the glob is whether the
+  directory itself or its contents will be at the CD root.
 
-    Use of this option assumes that you have a command line tool installed
-    that can handle the iso creation. Packer will use one of the following
-    tools:
+  Use of this option assumes that you have a command line tool installed
+  that can handle the iso creation. Packer will use one of the following
+  tools:
 
-      * xorriso
-      * mkisofs
-      * hdiutil (normally found in macOS)
-      * oscdimg (normally found in Windows as part of the Windows ADK)
+    * xorriso
+    * mkisofs
+    * hdiutil (normally found in macOS)
+    * oscdimg (normally found in Windows as part of the Windows ADK)
 
 
   - `cd_label` (string) - CD Label
@@ -575,10 +575,10 @@ efi_config {
 </Tab>
 </Tabs>
 
-  - `efitype` - (string) - Specifies the version of the OVMF firmware to be used. Can be `2m` or `4m`.
+- - `efitype` - (string) - Specifies the version of the OVMF firmware to be used. Can be `2m` or `4m`.
     Defaults to `4m`.
 
-  - `pre_enrolled_keys` - (boolean) - Whether Microsoft Standard Secure Boot keys should be pre-loaded on
+  -- `pre_enrolled_keys` - (boolean) - Whether Microsoft Standard Secure Boot keys should be pre-loaded on
     the EFI disk. Defaults to `false`.
 
   - `storage_pool` - (string) - Name of the Proxmox storage pool to store the EFI disk on.

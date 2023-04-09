@@ -154,29 +154,6 @@ source "proxmox_iso" "documentation" {
   </Tab>
   </Tabs>
 
-  + `device` (string) - Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
-    `sataX` or `scsiX`.
-    For `ide` the bus index ranges from 0 to 3, for `sata` form 0 to 5 and for
-    `scsi` from 0 to 30.
-    Defaults to `ide3` since `ide2` is generally the boot drive.
-
-  + `iso_checksum` (string) - Checksum of the ISO file.
-
-  + `iso_file` (string) - Path to the ISO file to boot from, expressed as a
-    proxmox datastore path, for example
-    `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
-    Either `iso_file` OR `iso_url` OR `cd_files` must be specifed.
-
-  + `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
-    the ISO file.
-
-  + `iso_url` (string) - URL to an ISO file to upload to Proxmox, and then
-    boot from. Either `iso_file` OR `iso_url` OR `cd_files` must be specifed.
-
-  + `unmount` (bool) - If true, remove the mounted ISO from the template after finishing. Defaults to `false`.
-
-  ### Optional
-
   + `cd_content` (map[string]string) - Key/Values to add to the CD. The keys represent the paths, and the values
     contents. It can be used alongside `cd_files`, which is useful to add large
     files without loading them into memory. If any paths are specified by both,
@@ -225,11 +202,11 @@ source "proxmox_iso" "documentation" {
   </Tab>
   </Tabs>
 
-  The above will create a CD with two files, user-data and meta-data in the
-  CD root. This specific example is how you would create a CD that can be
-  used for an Ubuntu 20.04 autoinstall.
+    The above will create a CD with two files, user-data and meta-data in the
+    CD root. This specific example is how you would create a CD that can be
+    used for an Ubuntu 20.04 autoinstall.
 
-  Since globbing is also supported,
+    Since globbing is also supported,
 
   <Tabs>
   <Tab heading="HCL2">
@@ -256,13 +233,13 @@ source "proxmox_iso" "documentation" {
   </Tab>
   </Tabs>
 
-  Would also be an acceptable way to define the above cd. The difference
-  between providing the directory with or without the glob is whether the
-  directory itself or its contents will be at the CD root.
+    Would also be an acceptable way to define the above cd. The difference
+    between providing the directory with or without the glob is whether the
+    directory itself or its contents will be at the CD root.
 
-  Use of this option assumes that you have a command line tool installed
-  that can handle the iso creation. Packer will use one of the following
-  tools:
+    Use of this option assumes that you have a command line tool installed
+    that can handle the iso creation. Packer will use one of the following
+    tools:
 
     - xorriso
     - mkisofs
@@ -271,6 +248,27 @@ source "proxmox_iso" "documentation" {
 
 
   + `cd_label` (string) - CD Label
+
+  + `device` (string) - Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
+    `sataX` or `scsiX`.
+    For `ide` the bus index ranges from 0 to 3, for `sata` form 0 to 5 and for
+    `scsi` from 0 to 30.
+    Defaults to `ide3` since `ide2` is generally the boot drive.
+
+  + `iso_checksum` (string) - Checksum of the ISO file.
+
+  + `iso_file` (string) - Path to the ISO file to boot from, expressed as a
+    proxmox datastore path, for example
+    `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
+    Either `iso_file` OR `iso_url` OR `cd_files` must be specifed.
+
+  + `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
+    the ISO file.
+
+  + `iso_url` (string) - URL to an ISO file to upload to Proxmox, and then
+    boot from. Either `iso_file` OR `iso_url` OR `cd_files` must be specifed.
+
+  + `unmount` (bool) - If true, remove the mounted ISO from the template after finishing. Defaults to `false`.
 
 - `bios` - (string) - Set the machine bios. This can be set to ovmf or seabios. The default value is seabios.
 
@@ -482,9 +480,9 @@ source "proxmox_iso" "documentation" {
   Defaults to `lsi`.
 
 - `serials` ([]string) - A list (max 4 elements) of serial ports attached to
-the virtual machine. It may pass through a host serial device `/dev/ttyS0`
-or create unix socket on the host `socket`. Each element can be `socket`
-or responding to pattern `/dev/.+`. Example:
+  the virtual machine. It may pass through a host serial device `/dev/ttyS0`
+  or create unix socket on the host `socket`. Each element can be `socket`
+  or responding to pattern `/dev/.+`. Example:
 
 <Tabs>
 <Tab heading="HCL2">

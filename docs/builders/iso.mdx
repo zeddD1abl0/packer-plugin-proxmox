@@ -81,6 +81,46 @@ in the image's Cloud-Init settings for provisioning.
   Can also be set via the `PROXMOX_USERNAME` environment variable. Note: The default
   root user account is `root@pam`.
 
+<Tabs>
+<Tab heading="HCL2">
+
+```hcl
+source "proxmox_iso" "documentation" {
+  iso_checksum = "sha256:5e38b55d57d94ff029719342357325ed3bda38fa80054f9330dc789cd2d43931"
+  #iso_file = "local:iso/ubuntu-22.04.2-live-server-amd64.iso"
+  iso_storage_pool = "local"
+  iso_url = "https://releases.ubuntu.com/jammy/ubuntu-22.04.2-live-server-amd64.iso"
+  node = "node01"
+  password = "mySuperSecretPassword01!"
+  proxmox_url = "https://node01.demo.local:8006/api2/json"
+  #token = ""
+  username = "root@pam"
+}
+```
+
+</Tab>
+<Tab heading="JSON">
+
+```json
+{
+  "builders": [
+    {
+      "type": "proxmox-iso",
+      "iso_checksum": "sha256:5e38b55d57d94ff029719342357325ed3bda38fa80054f9330dc789cd2d43931",
+      "iso_storage_pool": "local",
+      "iso_url": "https://releases.ubuntu.com/jammy/ubuntu-22.04.2-live-server-amd64.iso",
+      "node": "node01",
+      "password": "mySuperSecretPassword01!",
+      "proxmox_url": "https://node01.demo.local:8006/api2/json",
+      "username": "root@pam",
+    }
+  ]
+}
+```
+
+</Tab>
+</Tabs>
+
 ### Optional:
 
 - `iso_download_pve` (bool) - Download the specified `iso_url` directly from
@@ -377,10 +417,10 @@ additional_iso_files {
 
   ### Optional
 
-    - `cd_content` (map[string]string) - Key/Values to add to the CD. The keys represent the paths, and the values
-      contents. It can be used alongside `cd_files`, which is useful to add large
-      files without loading them into memory. If any paths are specified by both,
-      the contents in `cd_content` will take precedence.
+  - `cd_content` (map[string]string) - Key/Values to add to the CD. The keys represent the paths, and the values
+    contents. It can be used alongside `cd_files`, which is useful to add large
+    files without loading them into memory. If any paths are specified by both,
+    the contents in `cd_content` will take precedence.
 
 <Tabs>
 <Tab heading="HCL2">
@@ -415,72 +455,84 @@ additional_iso_files {
 </Tab>
 </Tabs>
 
-    - `cd_files` ([]string) - A list of files to place onto a CD that is attached when the VM is
-      booted. This can include either files or directories; any directories
-      will be copied onto the CD recursively, preserving directory structure
-      hierarchy. Symlinks will have the link's target copied into the directory
-      tree on the CD where the symlink was. File globbing is allowed. Overrides
-      any of `iso_file` or `iso_url` set. Requires `iso_storage_pool` to be set
+  - `cd_files` ([]string) - A list of files to place onto a CD that is attached when the VM is
+    booted. This can include either files or directories; any directories
+    will be copied onto the CD recursively, preserving directory structure
+    hierarchy. Symlinks will have the link's target copied into the directory
+    tree on the CD where the symlink was. File globbing is allowed. Overrides
+    any of `iso_file` or `iso_url` set. Requires `iso_storage_pool` to be set
 
 <Tabs>
 <Tab heading="HCL2">
 
 ```hcl
-cd_files = ["./somedirectory/meta-data", "./somedirectory/user-data"]
-cd_label = "cidata"
+additional_iso_files {
+  cd_files = ["./somedirectory/meta-data", "./somedirectory/user-data"]
+  cd_label = "cidata"
+}
 ```
 
 </Tab>
 <Tab heading="JSON">
 
 ```json
-"cd_files": ["./somedirectory/meta-data", "./somedirectory/user-data"],
-"cd_label": "cidata",
+"additional_iso_files": [
+  {
+    "cd_files": ["./somedirectory/meta-data", "./somedirectory/user-data"],
+    "cd_label": "cidata",
+  }
+]
 ```
 
 </Tab>
 </Tabs>
 
-      The above will create a CD with two files, user-data and meta-data in the
-      CD root. This specific example is how you would create a CD that can be
-      used for an Ubuntu 20.04 autoinstall.
+    The above will create a CD with two files, user-data and meta-data in the
+    CD root. This specific example is how you would create a CD that can be
+    used for an Ubuntu 20.04 autoinstall.
 
-      Since globbing is also supported,
+    Since globbing is also supported,
 
 <Tabs>
 <Tab heading="HCL2">
 
 ```hcl
-cd_files = ["./somedirectory/*"]
-cd_label = "cidata"
+additional_iso_files {
+  cd_files = ["./somedirectory/*"]
+  cd_label = "cidata"
+}
 ```
 
 </Tab>
 <Tab heading="JSON">
 
 ```json
-"cd_files": ["./somedirectory/*"],
-"cd_label": "cidata",
+"additional_iso_files": [
+  {
+    "cd_files": ["./somedirectory/*"],
+    "cd_label": "cidata",
+  }
+]
 ```
 
 </Tab>
 </Tabs>
 
-      Would also be an acceptable way to define the above cd. The difference
-      between providing the directory with or without the glob is whether the
-      directory itself or its contents will be at the CD root.
+    Would also be an acceptable way to define the above cd. The difference
+    between providing the directory with or without the glob is whether the
+    directory itself or its contents will be at the CD root.
 
-      Use of this option assumes that you have a command line tool installed
-      that can handle the iso creation. Packer will use one of the following
-      tools:
+    Use of this option assumes that you have a command line tool installed
+    that can handle the iso creation. Packer will use one of the following
+    tools:
 
-        * xorriso
-        * mkisofs
-        * hdiutil (normally found in macOS)
-        * oscdimg (normally found in Windows as part of the Windows ADK)
+      * xorriso
+      * mkisofs
+      * hdiutil (normally found in macOS)
+      * oscdimg (normally found in Windows as part of the Windows ADK)
 
 
-    - `cd_label` (string) - CD Label
+  - `cd_label` (string) - CD Label
 
 - `http_interface` - (string) - Name of the network interface that Packer gets
   `HTTPIP` from. Defaults to the first non loopback interface.
@@ -488,31 +540,48 @@ cd_label = "cidata"
 - `vm_interface` - (string) - Name of the network interface that Packer gets
   the VMs IP from. Defaults to the first non loopback interface.
 
+- `bios` - (string) - Set the machine bios. This can be set to ovmf or seabios. The default value is seabios.
+
 - `boot` - (string) - Override default boot order. Format example `order=virtio0;ide2;net0`.
   Prior to Proxmox 6.2-15 the format was `cdn` (c:CDROM -> d:Disk -> n:Network)
-
-- `bios` - (string) - Set the machine bios. This can be set to ovmf or seabios. The default value is seabios.
 
 - `efi_config` - (object) - Set the efidisk storage options. This needs to be set if you use ovmf uefi boot
   (supersedes the `efidisk` option).
 
-  Usage example (JSON):
+<Tabs>
+<Tab heading="HCL2">
 
-  ```json
-  {
-    "efi_storage_pool": "local",
-    "pre_enrolled_keys": true,
-    "efi_type": "4m"
-  }
-  ```
+```hcl
+bios = "ovmf"
+efi_config {
+  efi_storage_pool = "local",
+  pre_enrolled_keys = true,
+  efi_type = "4m"
+}
+```
 
-  - `storage_pool` - (string) - Name of the Proxmox storage pool to store the EFI disk on.
+</Tab>
+<Tab heading="JSON">
+
+```json
+"bios": "ovmf"
+"efi_config": {
+  "efi_storage_pool": "local",
+  "pre_enrolled_keys": true,
+  "efi_type": "4m"
+}
+```
+
+</Tab>
+</Tabs>
 
   - `efitype` - (string) - Specifies the version of the OVMF firmware to be used. Can be `2m` or `4m`.
     Defaults to `4m`.
 
   - `pre_enrolled_keys` - (boolean) - Whether Microsoft Standard Secure Boot keys should be pre-loaded on
     the EFI disk. Defaults to `false`.
+
+  - `storage_pool` - (string) - Name of the Proxmox storage pool to store the EFI disk on.
 
 - `efidisk` - (string) - This option is deprecated, please use `efi_config` instead.
 

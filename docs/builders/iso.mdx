@@ -184,11 +184,11 @@ vga {
 </Tab>
 </Tabs>
 
-  - `type` (string) - Can be `cirrus`, `none`, `qxl`,`qxl2`, `qxl3`,
+  * `type` (string) - Can be `cirrus`, `none`, `qxl`,`qxl2`, `qxl3`,
     `qxl4`, `serial0`, `serial1`, `serial2`, `serial3`, `std`, `virtio`, `vmware`.
     Defaults to `std`.
 
-  - `memory` (int) - How much memory to assign.
+  * `memory` (int) - How much memory to assign in MB.
 
 - `network_adapters` (array of objects) - Network adapters attached to the
   virtual machine. Example:
@@ -222,29 +222,29 @@ network_adapters {
 </Tab>
 </Tabs>
 
-  - `bridge` (string) - Required. Which Proxmox bridge to attach the
+  * `bridge` (string) - Required. Which Proxmox bridge to attach the
     adapter to.
 
-  - `model` (string) - Model of the virtual network adapter. Can be
+  * `model` (string) - Model of the virtual network adapter. Can be
     `rtl8139`, `ne2k_pci`, `e1000`, `pcnet`, `virtio`, `ne2k_isa`,
     `i82551`, `i82557b`, `i82559er`, `vmxnet3`, `e1000-82540em`,
     `e1000-82544gc` or `e1000-82545em`. Defaults to `e1000`.
 
-  - `mac_address` (string) - Give the adapter a specific MAC address. If
+  * `mac_address` (string) - Give the adapter a specific MAC address. If
     not set, defaults to a random MAC. If value is "repeatable", value of MAC
     address is deterministic based on VM ID and NIC ID.
 
-  - `mtu` (int) - Set the maximum transmission unit for the adapter. Valid
+  * `mtu` (int) - Set the maximum transmission unit for the adapter. Valid
     range: 0 - 65520. If set to `1`, the MTU is inherited from the bridge
     the adapter is attached to. Defaults to `0` (use Proxmox default).
 
-  - `vlan_tag` (string) - If the adapter should tag packets. Defaults to
+  * `vlan_tag` (string) - If the adapter should tag packets. Defaults to
     no tagging.
 
-  - `firewall` (bool) - If the interface should be protected by the firewall.
+  * `firewall` (bool) - If the interface should be protected by the firewall.
     Defaults to `false`.
 
-  - `packet_queues` (int) - Number of packet queues to be used on the device.
+  * `packet_queues` (int) - Number of packet queues to be used on the device.
     Values greater than 1 indicate that the multiqueue feature is activated.
     For best performance, set this to the number of cores available to the
     virtual machine. CPU load on the host and guest systems will increase as
@@ -286,10 +286,10 @@ serials = ["socket", "/dev/ttyS1"]
 
 ```hcl
 disks {
-  type = "scsi"
   disk_size = "5G"
+  format = qcow2
   storage_pool = "local-lvm"
-  storage_pool_type = "lvm"
+  type = "scsi"
 }
 ```
 
@@ -299,10 +299,10 @@ disks {
 ```json
 [
   {
-    "type": "scsi",
     "disk_size": "5G",
+    "format": "qcow2",
     "storage_pool": "local-lvm",
-    "storage_pool_type": "lvm"
+    "type": "scsi"
   }
 ]
 ```
@@ -310,30 +310,30 @@ disks {
 </Tab>
 </Tabs>
 
-  - `storage_pool` (string) - Required. Name of the Proxmox storage pool
-    to store the virtual machine disk on. A `local-lvm` pool is allocated
-    by the installer, for example.
-
-  - `storage_pool_type` (string) - This option is deprecated.
-
-  - `type` (string) - The type of disk. Can be `scsi`, `sata`, `virtio` or
-    `ide`. Defaults to `scsi`.
-
-  - `disk_size` (string) - The size of the disk, including a unit suffix, such
-    as `10G` to indicate 10 gigabytes.
-
-  - `cache_mode` (string) - How to cache operations to the disk. Can be
+  * `cache_mode` (string) - How to cache operations to the disk. Can be
     `none`, `writethrough`, `writeback`, `unsafe` or `directsync`.
     Defaults to `none`.
 
-  - `format` (string) - The format of the file backing the disk. Can be
+  * `disk_size` (string) - The size of the disk, including a unit suffix, such
+    as `10G` to indicate 10 gigabytes.
+
+  * `format` (string) - The format of the file backing the disk. Can be
     `raw`, `cow`, `qcow`, `qed`, `qcow2`, `vmdk` or `cloop`. Defaults to
     `raw`.
 
-  - `io_thread` (bool) - Create one I/O thread per storage controller, rather
+  * `io_thread` (bool) - Create one I/O thread per storage controller, rather
     than a single thread for all I/O. This can increase performance when
     multiple disks are used. Requires `virtio-scsi-single` controller and a
     `scsi` or `virtio` disk. Defaults to `false`.
+
+  * `storage_pool` (string) - Required. Name of the Proxmox storage pool
+    to store the virtual machine disk on. A `local-lvm` pool is allocated
+    by the installer, for example.
+
+  * `storage_pool_type` (string) - This option is deprecated.
+
+  * `type` (string) - The type of disk. Can be `scsi`, `sata`, `virtio` or
+    `ide`. Defaults to `scsi`.
 
 - `template_name` (string) - Name of the template. Defaults to the generated
   name used during creation.
@@ -394,30 +394,30 @@ additional_iso_files {
 </Tab>
 </Tabs>
 
-  - `device` (string) - Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
+  * `device` (string) - Bus type and bus index that the ISO will be mounted on. Can be `ideX`,
     `sataX` or `scsiX`.
     For `ide` the bus index ranges from 0 to 3, for `sata` form 0 to 5 and for
     `scsi` from 0 to 30.
     Defaults to `ide3` since `ide2` is generally the boot drive.
 
-  - `iso_checksum` (string) - Checksum of the ISO file.
+  * `iso_checksum` (string) - Checksum of the ISO file.
 
-  - `iso_file` (string) - Path to the ISO file to boot from, expressed as a
+  * `iso_file` (string) - Path to the ISO file to boot from, expressed as a
     proxmox datastore path, for example
     `local:iso/Fedora-Server-dvd-x86_64-29-1.2.iso`.
     Either `iso_file` OR `iso_url` OR `cd_files` must be specifed.
 
-  - `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
+  * `iso_storage_pool` (string) - Proxmox storage pool onto which to upload
     the ISO file.
 
-  - `iso_url` (string) - URL to an ISO file to upload to Proxmox, and then
+  * `iso_url` (string) - URL to an ISO file to upload to Proxmox, and then
     boot from. Either `iso_file` OR `iso_url` OR `cd_files` must be specifed.
 
-  - `unmount` (bool) - If true, remove the mounted ISO from the template after finishing. Defaults to `false`.
+  * `unmount` (bool) - If true, remove the mounted ISO from the template after finishing. Defaults to `false`.
 
   ### Optional
 
-  - `cd_content` (map[string]string) - Key/Values to add to the CD. The keys represent the paths, and the values
+  * `cd_content` (map[string]string) - Key/Values to add to the CD. The keys represent the paths, and the values
     contents. It can be used alongside `cd_files`, which is useful to add large
     files without loading them into memory. If any paths are specified by both,
     the contents in `cd_content` will take precedence.
@@ -455,7 +455,7 @@ additional_iso_files {
 </Tab>
 </Tabs>
 
-  - `cd_files` ([]string) - A list of files to place onto a CD that is attached when the VM is
+  * `cd_files` ([]string) - A list of files to place onto a CD that is attached when the VM is
     booted. This can include either files or directories; any directories
     will be copied onto the CD recursively, preserving directory structure
     hierarchy. Symlinks will have the link's target copied into the directory
@@ -526,13 +526,13 @@ additional_iso_files {
   that can handle the iso creation. Packer will use one of the following
   tools:
 
-    * xorriso
-    * mkisofs
-    * hdiutil (normally found in macOS)
-    * oscdimg (normally found in Windows as part of the Windows ADK)
+    - xorriso
+    - mkisofs
+    - hdiutil (normally found in macOS)
+    - oscdimg (normally found in Windows as part of the Windows ADK)
 
 
-  - `cd_label` (string) - CD Label
+  * `cd_label` (string) - CD Label
 
 - `http_interface` - (string) - Name of the network interface that Packer gets
   `HTTPIP` from. Defaults to the first non loopback interface.
@@ -575,13 +575,13 @@ efi_config {
 </Tab>
 </Tabs>
 
-  - `efitype` - (string) - Specifies the version of the OVMF firmware to be used. Can be `2m` or `4m`.
+  * `efitype` - (string) - Specifies the version of the OVMF firmware to be used. Can be `2m` or `4m`.
     Defaults to `4m`.
 
-  - `pre_enrolled_keys` - (boolean) - Whether Microsoft Standard Secure Boot keys should be pre-loaded on
+  * `pre_enrolled_keys` - (boolean) - Whether Microsoft Standard Secure Boot keys should be pre-loaded on
     the EFI disk. Defaults to `false`.
 
-  - `storage_pool` - (string) - Name of the Proxmox storage pool to store the EFI disk on.
+  * `storage_pool` - (string) - Name of the Proxmox storage pool to store the EFI disk on.
 
 - `efidisk` - (string) - This option is deprecated, please use `efi_config` instead.
 

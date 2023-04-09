@@ -122,20 +122,24 @@ in the image's Cloud-Init settings for provisioning.
 - `vga` (object) - The graphics adapter to use. Example:
 <Tabs>
 <Tab heading="HCL2">
+
 ```hcl
 vga {
   type = "vmware"
   memory = 32
 }
 ```
+
 </Tab>
 <Tab heading="JSON">
+
 ```json
 {
   "type": "vmware",
   "memory": 32
 }
 ```
+
 </Tab>
 </Tabs>
 
@@ -150,6 +154,7 @@ vga {
 
 <Tabs>
 <Tab heading="HCL2">
+
 ```hcl
 network_adapters {
   model = "virtio"
@@ -158,8 +163,10 @@ network_adapters {
   firewall = true
 }
 ```
+
 </Tab>
 <Tab heading="JSON">
+
 ```json
 [
   {
@@ -170,6 +177,7 @@ network_adapters {
   }
 ]
 ```
+
 </Tab>
 </Tabs>
 
@@ -211,17 +219,21 @@ or responding to pattern `/dev/.+`. Example:
 
 <Tabs>
 <Tab heading="HCL2">
+
 ```hcl
 serials = ["socket", "/dev/ttyS1"]
 ```
+
 </Tab>
 <Tab heading="JSON">
+
 ```json
 [
   "socket",
   "/dev/ttyS1"
 ]
 ```
+
 </Tab>
 </Tabs>
 
@@ -230,6 +242,7 @@ serials = ["socket", "/dev/ttyS1"]
 
 <Tabs>
 <Tab heading="HCL2">
+
 ```hcl
 disks {
   type = "scsi"
@@ -238,8 +251,10 @@ disks {
   storage_pool_type = "lvm"
 }
 ```
+
 </Tab>
 <Tab heading="JSON">
+
 ```json
 [
   {
@@ -250,6 +265,7 @@ disks {
   }
 ]
 ```
+
 </Tab>
 </Tabs>
 
@@ -311,6 +327,7 @@ disks {
 
 <Tabs>
 <Tab heading="HCL2">
+
 ```hcl
 additional_iso_files {
   device = "scsi5"
@@ -318,8 +335,10 @@ additional_iso_files {
   iso_file = "local:iso/virtio-win-0.1.229.iso"
 }
 ```
+
 </Tab>
 <Tab heading="JSON">
+
 ```json
 [
   {
@@ -330,6 +349,7 @@ additional_iso_files {
   }
 ]
 ```
+
 </Tab>
 </Tabs>
 

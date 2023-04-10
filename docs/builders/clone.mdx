@@ -78,7 +78,7 @@ in the image's Cloud-Init settings for provisioning.
 <Tab heading="HCL2">
 
 ```hcl
-source "proxmox_iso" "documentation" {
+source "proxmox_clone" "documentation" {
   clone_vm = "vmname"
   #clone_vm_id = 101
   node = "node01"
@@ -96,7 +96,7 @@ source "proxmox_iso" "documentation" {
 {
   "builders": [
     {
-      "type": "proxmox-iso",
+      "type": "proxmox-clone",
       "clone_vm": "vmname",
       "node": "node01",
       "password": "mySuperSecretPassword01!",
